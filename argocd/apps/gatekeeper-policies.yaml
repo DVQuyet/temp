@@ -1,0 +1,23 @@
+# ArgoCD App: Deploy Gatekeeper Policies (ConstraintTemplates and Constraints)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gatekeeper-policies
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DVQuyet/temp.git
+    path: gatekeeper
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gatekeeper-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

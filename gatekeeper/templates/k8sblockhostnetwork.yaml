@@ -1,0 +1,28 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockhostnetwork
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockHostNetwork
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockhostnetwork
+
+        violation[{"msg": msg}] {
+          host_network := get_host_network
+          host_network == true
+          msg := "Using hostNetwork: true is forbidden for security reasons."
+        }
+
+        get_host_network := hn {
+          hn := input.review.object.spec.hostNetwork
+        }
+        get_host_network := hn {
+          hn := input.review.object.spec.template.spec.hostNetwork
+        }

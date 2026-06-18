@@ -1,0 +1,20 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockLatest
+metadata:
+  name: block-latest-image-tag
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+      - apiGroups: ["argoproj.io"]
+        kinds: ["Rollout"]
+    excludedNamespaces:
+      - kube-system
+      - argocd
+      - monitoring
+      - gatekeeper-system

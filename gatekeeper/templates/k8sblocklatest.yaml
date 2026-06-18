@@ -1,0 +1,42 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblocklatest
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockLatest
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblocklatest
+
+        violation[{"msg": msg}] {
+          container := get_containers[_]
+          image := container.image
+          is_latest(image)
+          msg := sprintf("Image '%v' uses the 'latest' tag or has no tag, which is forbidden (Risk F-01). Please pin a specific version tag.", [image])
+        }
+
+        get_containers[container] {
+          container := input.review.object.spec.containers[_]
+        }
+        get_containers[container] {
+          container := input.review.object.spec.template.spec.containers[_]
+        }
+        get_containers[container] {
+          container := input.review.object.spec.template.spec.initContainers[_]
+        }
+        get_containers[container] {
+          container := input.review.object.spec.initContainers[_]
+        }
+
+        is_latest(image) {
+          not contains(image, ":")
+        }
+        is_latest(image) {
+          endswith(image, ":latest")
+        }
