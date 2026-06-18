@@ -12,6 +12,8 @@ spec:
     repoURL: https://github.com/DVQuyet/temp.git
     path: gatekeeper
     targetRevision: main
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: gatekeeper-system
