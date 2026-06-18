@@ -1,0 +1,24 @@
+# ArgoCD App: Deploy payments infrastructure (namespace, rbac, quota, netpol)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payments-infra
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DVQuyet/temp.git
+    path: tenants/payments
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: payments
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

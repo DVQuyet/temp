@@ -205,3 +205,14 @@ kubectl delete ns argocd
 minikube stop -p w10
 minikube delete -p w10
 ```
+
+## Multi-Tenant Challenge: Onboarding Payments Team
+
+### Câu 1: Vì sao guardrail cũ tự áp dụng cho team B mà không cần viết luật mới?
+1. **Gatekeeper Constraints**: Các chính sách bảo mật của Gatekeeper (như chặn chạy dưới quyền root, chặn tag `latest`, yêu cầu cấu hình limits) được áp dụng ở phạm vi toàn cụm (cluster-wide). Trong phần cấu hình `spec.match.excludedNamespaces`, chúng ta chỉ loại trừ các namespace hệ thống (`kube-system`, `argocd`, `monitoring`, `gatekeeper-system`). Do đó, bất kỳ namespace mới nào được tạo ra (bao gồm cả `payments`) đều mặc định chịu sự kiểm soát của các constraint này mà không cần viết thêm luật.
+2. **Sigstore / Policy Controller**: Cơ chế xác thực chữ ký số được kích hoạt thông qua việc gắn nhãn (label) `policy.sigstore.dev/include: "true"` lên namespace. Khi namespace `payments` được tạo và gắn nhãn này, Sigstore Admission Webhook sẽ tự động đối chiếu tất cả image triển khai tại đây với `ClusterImagePolicy` đã có sẵn trên cụm, bảo vệ chuỗi cung ứng ứng dụng tự động.
+
+### Câu 2: Role/RoleBinding khác ClusterRoleBinding ra sao để giữ cô lập?
+* **Role & RoleBinding**: Là các tài nguyên có phạm vi namespace (namespaced resources). `Role` chỉ định nghĩa các quyền trong phạm vi một namespace nhất định, và `RoleBinding` liên kết ServiceAccount với Role đó trong cùng namespace. Điều này đảm bảo ServiceAccount `payments-dev` của team B chỉ có thể thao tác với các workload trong namespace `payments` và hoàn toàn bị chặn khi cố gắng truy cập tài nguyên của namespace khác (như `demo`).
+* **ClusterRoleBinding**: Là tài nguyên phạm vi toàn cụm (cluster-wide resource). Nó liên kết một đối tượng với một `ClusterRole` và cấp quyền trên **tất cả** namespace của cụm. Nếu dùng ClusterRoleBinding, ServiceAccount `payments-dev` sẽ có quyền can thiệp vào tài nguyên của namespace `demo` (hoặc các namespace khác), phá vỡ nguyên lý cô lập đa người dùng (multi-tenant isolation).
+
