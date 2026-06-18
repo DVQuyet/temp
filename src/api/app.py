@@ -16,6 +16,14 @@ def index():
         return jsonify(error="injected", version=VERSION), 500
     return jsonify(ok=True, version=VERSION)
 
+@app.get("/secret")
+def get_secret():
+    secret_path = "/secrets/password"
+    if os.path.exists(secret_path):
+        with open(secret_path, "r") as f:
+            return jsonify(password=f.read().strip())
+    return jsonify(error="secret not found"), 404
+
 @app.get("/healthz")
 def healthz():
     return "ok", 200
