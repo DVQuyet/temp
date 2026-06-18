@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-violate-deployment
+  namespace: default
+spec:
+  replicas: 6  # Vi phạm: > 5
+  selector:
+    matchLabels:
+      app: test-violate
+  template:
+    metadata:
+      labels:
+        app: test-violate
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+      containers:
+      - name: nginx
+        image: nginx:1.25.1
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
